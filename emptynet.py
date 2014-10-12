@@ -1,6 +1,6 @@
 from mininet.net import Mininet
 from mininet.node import Controller
-from mininnet.cli import CLI
+from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 
 def emptyNet ():
@@ -31,6 +31,6 @@ def emptyNet ():
 	info ('*** Stopping network')
 	net.stop()
 	
-if __name__ == '__main__':
+if __name__ == "__main__":
 	setLogLevel('info')
 	emptyNet()
