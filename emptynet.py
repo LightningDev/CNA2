@@ -3,7 +3,7 @@ from mininet.node import Controller
 from mininnet.cli import CLI
 from mininet.log import setLogLevel, info
 
-def emptyNet ();
+def emptyNet ():
 	"Create an empty network and add nodes to it."
 	
 	net = Mininet (controller=Controller)
