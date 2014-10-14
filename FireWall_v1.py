@@ -8,7 +8,7 @@ from pox.lib.packet.ethernet import ethernet
 log = core.getLogger()
 
 
-class MyFireWall(EventMixin):
+class MyFireWall():
 
     def __init__(self, connection):
         self.connection = connection
