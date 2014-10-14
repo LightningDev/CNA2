@@ -33,7 +33,7 @@ class MyFireWall(object):
         #     return
 
         # check if packet is compliant to rules before proceeding
-        if (self.firewall[(event.connection, packet.dl_type, packet.nw_proto, packet.tp_src, event.port)] == True):
+        if (self.firewall[(packet.dl_type, packet.nw_proto, packet.tp_src, event.port)] == True):
             log.debug("Rule (%s %s %s %s) FOUND in %s" %
                       dpidToStr(event.connection.dpid), packet.dl_type, packet.nw_proto, packet.tp_src, event.port)
         else:
