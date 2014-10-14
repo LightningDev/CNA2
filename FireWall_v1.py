@@ -8,7 +8,7 @@ from pox.lib.packet.ethernet import ethernet
 log = core.getLogger()
 
 
-class MyFireWall():
+class MyFireWall(object):
 
     def __init__(self, connection):
         self.connection = connection
@@ -88,7 +88,10 @@ class MyFireWall():
                        packet.src, event.ofp.in_port, packet.dst, dst_port))
 
 def lunch():
-    core.registerNew(MyFireWall)
+    def start_switch (event):
+        log.debug ("Controlling %s" % (event.connection,))
+        MyFireWall(event.connection)
+    core.openflow.addListenerByName("ConnectionUp", start_switch)
 
 
 
