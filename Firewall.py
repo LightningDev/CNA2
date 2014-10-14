@@ -4,6 +4,7 @@ __author__ = 'nhat'
 from pox.core import core
 from pox.lib.util import dpidToStr
 import pox.openflow.libopenflow_01 as of
+import pox.lib.packet as pkt
 from pox.lib.packet.ethernet import ethernet
 
 # Even a simple usage of the logger is much nicer than print!
@@ -59,7 +60,8 @@ def _handle_PacketIn(event):
 
     # only process Ethernet packets
     if packet.type != ethernet.IP_TYPE:
-        log.debug(packet.type)
+        name1 = pkt.ETHERNET.ethernet.getNameForType(packet.type)
+        log.debug(name1)
         return
 
     # check if packet is compliant to rules before proceeding
