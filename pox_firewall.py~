@@ -48,7 +48,7 @@ class Firewall (EventMixin):
             msg = of.ofp_flow_mod()
             msg.match = match
             event.connection.send(msg)
-
+	    log.debug("Message is ", msg)
             # Note: Set the priority for your rule to 20 so that it
             # doesn't conflict with the learning bridge setup
             pass
