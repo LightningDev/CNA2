@@ -87,7 +87,7 @@ class MyFireWall(object):
                       (packet.dst, dst_port, packet.src, event.ofp.in_port,
                        packet.src, event.ofp.in_port, packet.dst, dst_port))
 
-def lunch():
+def launch():
     def start_switch (event):
         log.debug ("Controlling %s" % (event.connection,))
         MyFireWall(event.connection)
