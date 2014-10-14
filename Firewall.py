@@ -59,6 +59,7 @@ def _handle_PacketIn(event):
 
     # only process Ethernet packets
     if packet.type != ethernet.IP_TYPE:
+        log.debug(packet.type)
         return
 
     # check if packet is compliant to rules before proceeding
