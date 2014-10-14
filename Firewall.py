@@ -122,5 +122,6 @@ def _handle_PacketIn(event):
 
 # main function to start module
 def launch():
+    core.Interactive.variables['ShowRule'] = ShowRule
     core.openflow.addListenerByName("ConnectionUp", _handle_StartFirewall)
     core.openflow.addListenerByName("PacketIn", _handle_PacketIn)
