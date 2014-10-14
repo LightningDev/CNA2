@@ -51,8 +51,7 @@ def ShowRules():
 
 # function to handle all housekeeping items when firewall starts
 def _handle_StartFirewall(event):
-    AddRule (event, 0x800, 1, 0, of.OFPP_ALL)
-    ShowRules ()
+    ShowRules()
     log.info("Firewall Tutorial is running.")
 
 
@@ -124,5 +123,6 @@ def _handle_PacketIn(event):
 
 # main function to start module
 def launch():
+    core.openflow.addListenerByName("AddRule", AddRule)
     core.openflow.addListenerByName("ConnectionUp", _handle_StartFirewall)
     core.openflow.addListenerByName("PacketIn", _handle_PacketIn)
