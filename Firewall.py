@@ -49,6 +49,7 @@ def ShowRules():
 
 # function to handle all housekeeping items when firewall starts
 def _handle_StartFirewall(event):
+    AddRule(event)
     log.info("Firewall Tutorial is running.")
 
 
