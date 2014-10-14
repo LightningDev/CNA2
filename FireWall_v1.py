@@ -24,7 +24,13 @@ class MyFireWall(object):
 
     # function to handle all PacketIns from switch/router
     def _handle_PacketIn(self, event):
-        packet = event.parsed
+        packet_in = event.parsed
+
+        if not packet_in.parsed:
+            log.debug("Ignore Incomplete packet")
+            return
+
+        packet = event.ofp
 
         # only process Ethernet packets
         # if packet.type != ethernet.IP_TYPE:
