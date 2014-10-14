@@ -1,5 +1,3 @@
-__author__ = 'nhat'
-
 # These next two imports are common POX convention
 from pox.core import core
 from pox.lib.util import dpidToStr
