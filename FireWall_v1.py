@@ -2,12 +2,13 @@ from pox.core import core
 from pox.lib.util import dpidToStr
 import pox.openflow.libopenflow_01 as of
 import pox.lib.packet as pkt
+import os
 from pox.lib.packet.ethernet import ethernet
 
 log = core.getLogger()
 
 
-class MyFireWall(object):
+class MyFireWall(EventMixin):
 
     def __init__(self, connection):
         self.connection = connection
@@ -85,6 +86,9 @@ class MyFireWall(object):
             log.debug("Installing %s.%i -> %s.%i AND %s.%i -> %s.%i" %
                       (packet.dst, dst_port, packet.src, event.ofp.in_port,
                        packet.src, event.ofp.in_port, packet.dst, dst_port))
+
+def lunch():
+    core.registerNew(MyFireWall)
 
 
 
