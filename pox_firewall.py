@@ -41,15 +41,14 @@ class Firewall (EventMixin):
         policies = self.read_policies(policyFile)
         for policy in policies.itervalues():
 
-	    log.debug(policy)
-            # TODO: implement the code to add a rule to block the flow
-            # between the source and destination specified in each policy
-
-            # Note: The policy data structure has two fields which you can
-            # access to turn the policy into a rule. policy.dl_src will
-            # give you the source mac address and policy.dl_dst will give
-            # you the destination mac address
-
+	    log.debug(policy[0] , policy[1])
+            match = of.ofp_match()
+	    match.dl_src = policy[0]
+            match.dl_dst = policy[1]
+            msg = of.ofp_flow_mod()
+            msg.match = match
+            event.connection.send(msg)
+	    log.debug("Message is ", msg)
             # Note: Set the priority for your rule to 20 so that it
             # doesn't conflict with the learning bridge setup
             pass
