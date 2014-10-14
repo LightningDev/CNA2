@@ -12,7 +12,7 @@ class MyFireWall(object):
 
     def __init__(self, connection):
         self.connection = connection
-        connection.addListenters(self)
+        connection.addListeners(self)
         self.table = {}
         self.firewall = {}
         self.set_rule(0x800, 1, 0, of.OFPP_ALL)
