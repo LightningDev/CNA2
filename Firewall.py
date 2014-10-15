@@ -26,19 +26,16 @@ firewall = {}
 # function that allows adding firewall rules into the firewall table
 def AddRule(event, dl_type=0x800, nw_proto=1, port=0, src_port=of.OFPP_ALL):
     firewall[(event.connection, dl_type, nw_proto, port, src_port)] = True
-    log.debug("Adding firewall rule to %s: %s %s %s %s" %
-              dpidToStr(event.connection.dpid), dl_type, nw_proto, port, src_port)
+    log.debug("Adding firewall rule")
 
 
 # function that allows deleting firewall rules from the firewall table
 def DeleteRule(event, dl_type=0x800, nw_proto=1, port=0, src_port=of.OFPP_ALL):
     try:
         del firewall[(event.connection, dl_type, nw_proto, port, src_port)]
-        log.debug("Deleting firewall rule in %s: %s %s %s %s" %
-                  dpidToStr(event.connection.dpid), dl_type, nw_proto, port, src_port)
+        log.debug("Deleting firewall rule")
     except KeyError:
-        log.error("Cannot find in %s: %s %s %s %s" %
-                  dpidToStr(event.connection.dpid), dl_type, nw_proto, port, src_port)
+        log.error("Cannot find")
 
 
 # function to display firewall rules
@@ -65,11 +62,9 @@ def _handle_PacketIn(event):
 
     # check if packet is compliant to rules before proceeding
     if (firewall[(event.connection, packet.dl_type, packet.nw_proto, packet.tp_src, event.port)] == True):
-        log.debug("Rule (%s %s %s %s) FOUND in %s" %
-                  dpidToStr(event.connection.dpid), packet.dl_type, packet.nw_proto, packet.tp_src, event.port)
+        log.debug("Rule Found")
     else:
-        log.debug("Rule (%s %s %s %s) NOT FOUND in %s" %
-                  dpidToStr(event.connection.dpid), packet.dl_type, packet.nw_proto, packet.tp_src, event.port)
+        log.debug("Rule Not Found")
         return
 
     # Learn the source and fill up routing table
