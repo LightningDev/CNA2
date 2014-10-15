@@ -58,10 +58,10 @@ def _handle_PacketIn(event):
     packet = event.parsed
 
     # only process Ethernet packets
-    if packet.type != ethernet.IP_TYPE:
-        name1 = pkt.ETHERNET.ethernet.getNameForType(packet.type)
-        log.debug(name1)
-        return
+    # if packet.type != ethernet.IP_TYPE:
+    #     name1 = pkt.ETHERNET.ethernet.getNameForType(packet.type)
+    #     log.debug(name1)
+    #     return
 
     # check if packet is compliant to rules before proceeding
     if (firewall[(event.connection, packet.dl_type, packet.nw_proto, packet.tp_src, event.port)] == True):
