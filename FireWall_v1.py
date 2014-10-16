@@ -37,6 +37,12 @@ class MyFireWall(object):
         #     return
 
         # check if packet is compliant to rules before proceeding
+        if not packet.parsed:
+            log.warning ("Ignore incomplete packet")
+            return
+
+        packet_in = event.ofp
+
 
         if packet.type == ethernet.ARP_TYPE:
             log.debug("ARP Go Through")
@@ -63,60 +69,91 @@ class MyFireWall(object):
         #     return
 
         # Implement Switch
+        self.table[str(packet.src)] = packet_in.in_port
 
+        if str(packet.dst) in self.table:
+            port = self.table[str(packet.dst)]
+            log.debug("installing flow for %s.%i -> %s.%i" % (packet.src, packet_in.in_port, packet.dst, port))
 
-
-
-
-
-        # Learn the source and fill up routing table
-        self.table[(event.connection, packet.src)] = event.port
-        dst_port = self.table.get((event.connection, packet.dst))
-
-        if dst_port is None:
-            # We don't know where the destination is yet. So, we'll just
-            # send the packet out all ports (except the one it came in on!)
-            msg = of.ofp_packet_out()
-            msg.in_port = event.ofp.in_port
-            msg.data = event.ofp.data
-
-            msg.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD))
-            self.connection.send(msg)
-
-            log.debug("Broadcasting %s.%i -> %s.%i" %
-                      (packet.src, event.ofp.in_port, packet.dst, of.OFPP_FLOOD))
-        else:
-            # Since we know the switch ports for both the source and dest
-            # MACs, we can install rules for both directions.
+            # create new flow with match record set to match dest and src
             msg = of.ofp_flow_mod()
-            msg.match.dl_type = 0x800
-            # msg.match.nw_proto = self.packet_protocol
-            # if self.packet_protocol != 1:
-            #     msg.match.tp_src = packet.tp_src
-            msg.match.dl_dst = packet.src
-            msg.match.dl_src = packet.dst
-            msg.idle_timeout = 10
-            msg.hard_timeout = 30
-            msg.actions.append(of.ofp_action_output(port=event.port))
-            self.connection.send(msg)
-
-            # This is the packet that just came in -- we want to
-            # install the rule and also resend the packet.
-            msg = of.ofp_flow_mod()
-            msg.match.dl_type = 0x800
-            # msg.match.nw_proto = self.packet_protocol
-            # if self.packet_protocol != 1:
-            #     msg.match.tp_src = packet.tp_src
             msg.match.dl_src = packet.src
             msg.match.dl_dst = packet.dst
             msg.idle_timeout = 10
             msg.hard_timeout = 30
-            msg.actions.append(of.ofp_action_output(port=dst_port))
+            msg.actions.append(of.ofp_action_output(port = port))
+            msg.buffer_id = packet_in.buffer_id
+            self.connection.send(msg)
+        else:
+            # Flood the packet out everything but the input port using
+            # ofp_packet_out()to send message to the switch
+
+            msg = of.ofp_packet_out()
+            msg.in_port = packet_in.in_port
+            if packet_in.buffer_id != -1 and packet_in.buffer_id is not None:
+                # We got a buffer ID from switch; use that
+                msg.buffer_id = packet_in.buffer_id
+            else:
+                # No buffer ID from switch -- we got the raw data
+                if packet_in.data is None:
+                    # No raw data specified -- nothing to send
+                    return
+                msg.data = packet_in.data
+
+            # Add an action to send to the specified port
+            action = of.ofp_action_output(port = of.OFPP_FLOOD)
+            msg.actions.append(action)
             self.connection.send(msg)
 
-            log.debug("Installing %s.%i -> %s.%i AND %s.%i -> %s.%i" %
-                      (packet.dst, dst_port, packet.src, event.ofp.in_port,
-                       packet.src, event.ofp.in_port, packet.dst, dst_port))
+
+        # # Learn the source and fill up routing table
+        # self.table[(event.connection, packet.src)] = event.port
+        # dst_port = self.table.get((event.connection, packet.dst))
+        #
+        # if dst_port is None:
+        #     # We don't know where the destination is yet. So, we'll just
+        #     # send the packet out all ports (except the one it came in on!)
+        #     msg = of.ofp_packet_out()
+        #     msg.in_port = event.ofp.in_port
+        #     msg.data = event.ofp.data
+        #
+        #     msg.actions.append(of.ofp_action_output(port=of.OFPP_FLOOD))
+        #     self.connection.send(msg)
+        #
+        #     log.debug("Broadcasting %s.%i -> %s.%i" %
+        #               (packet.src, event.ofp.in_port, packet.dst, of.OFPP_FLOOD))
+        # else:
+        #     # Since we know the switch ports for both the source and dest
+        #     # MACs, we can install rules for both directions.
+        #     msg = of.ofp_flow_mod()
+        #     msg.match.dl_type = 0x800
+        #     # msg.match.nw_proto = self.packet_protocol
+        #     # if self.packet_protocol != 1:
+        #     #     msg.match.tp_src = packet.tp_src
+        #     msg.match.dl_dst = packet.src
+        #     msg.match.dl_src = packet.dst
+        #     msg.idle_timeout = 10
+        #     msg.hard_timeout = 30
+        #     msg.actions.append(of.ofp_action_output(port=event.port))
+        #     self.connection.send(msg)
+        #
+        #     # This is the packet that just came in -- we want to
+        #     # install the rule and also resend the packet.
+        #     msg = of.ofp_flow_mod()
+        #     msg.match.dl_type = 0x800
+        #     # msg.match.nw_proto = self.packet_protocol
+        #     # if self.packet_protocol != 1:
+        #     #     msg.match.tp_src = packet.tp_src
+        #     msg.match.dl_src = packet.src
+        #     msg.match.dl_dst = packet.dst
+        #     msg.idle_timeout = 10
+        #     msg.hard_timeout = 30
+        #     msg.actions.append(of.ofp_action_output(port=dst_port))
+        #     self.connection.send(msg)
+        #
+        #     log.debug("Installing %s.%i -> %s.%i AND %s.%i -> %s.%i" %
+        #               (packet.dst, dst_port, packet.src, event.ofp.in_port,
+        #                packet.src, event.ofp.in_port, packet.dst, dst_port))
 
 def launch():
     def start_switch (event):
