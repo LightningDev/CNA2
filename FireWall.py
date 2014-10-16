@@ -49,15 +49,20 @@ class MyFireWall(object):
         else:
             if packet.type == ethernet.IP_TYPE:
                 ip_packet = packet.payload
-                self.packet_protocol = ip_packet.protocol
-                log.debug(self.packet_protocol)
-                log.debug(event.port)
-                self.protocol_packet = ip_packet.payload
-                if self.firewall[0x800, self.packet_protocol, self.protocol_packet.srcport, event.port]:
-                    log.debug("Rule found and go through")
-                else:
-                    log.debug("Rule not found, rejected")
-                    return
+                packet_protocol = ip_packet.protocol
+                protocol_packet = ip_packet.payload
+                self.src_port = -1
+                log.debug ("Event port %s" % event.port)
+                if packet_protocol == 1:
+                    self.src_port = 0
+                if packet_protocol == 6 | packet_protocol == 17:
+                    self.src_port = protocol_packet.srcport
+                if self.src_port > -1:
+                    if self.firewall[0x800, packet_protocol, self.src_port, event.port]:
+                        log.debug("Rule found and go through")
+                    else:
+                        log.debug("Rule not found, rejected")
+                        return
             else:
                 log.debug("Packet type is not allowed")
 
