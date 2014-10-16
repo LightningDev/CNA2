@@ -44,20 +44,20 @@ class MyFireWall(object):
         packet_in = event.ofp
 
 
-        if packet.type == ethernet.ARP_TYPE:
-            log.debug("ARP Go Through")
-        else:
-            ip_packet = packet.payload
-            self.packet_protocol = ip_packet.protocol
-            self.protocol_packet = self.packet_protocol.payload
-            if packet.type == ethernet.IP_TYPE:
-                if self.firewall[0x800, self.packet_protocol, self.protocol_packet.srcport, event.port]:
-                    log.debug("Rule found and go through")
-                else:
-                    log.debug("Rule not found, rejected")
-                    return
-            else:
-                log.debug("Packet type is not allowed")
+        # if packet.type == ethernet.ARP_TYPE:
+        #     log.debug("ARP Go Through")
+        # else:
+        #     ip_packet = packet.payload
+        #     self.packet_protocol = ip_packet.protocol
+        #     self.protocol_packet = self.packet_protocol.payload
+        #     if packet.type == ethernet.IP_TYPE:
+        #         if self.firewall[0x800, self.packet_protocol, self.protocol_packet.srcport, event.port]:
+        #             log.debug("Rule found and go through")
+        #         else:
+        #             log.debug("Rule not found, rejected")
+        #             return
+        #     else:
+        #         log.debug("Packet type is not allowed")
 
 
         # if self.firewall[packet.dl_type, packet.nw_proto, packet.tp_src, event.port]:
