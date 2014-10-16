@@ -44,8 +44,8 @@ class MyFireWall(object):
         packet_in = event.ofp
 
 
-        # if packet.type == ethernet.ARP_TYPE:
-        #     log.debug("ARP Go Through")
+        if packet.type == ethernet.ARP_TYPE:
+             log.debug("ARP Go Through")
         # else:
         #     ip_packet = packet.payload
         #     self.packet_protocol = ip_packet.protocol
