@@ -26,9 +26,9 @@ class MyFireWall(object):
     def _handle_PacketIn(self, event):
         packet = event.parsed
 
-        if packet.find('ipv6'):
-            log.debug ("IPV6 cannot go through, rejected")
-            return
+        # if packet.find('ipv6'):
+        #     log.debug ("IPV6 cannot go through, rejected")
+        #     return
 
         # only process Ethernet packets
         # if packet.type != ethernet.IP_TYPE:
