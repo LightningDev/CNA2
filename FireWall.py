@@ -52,7 +52,7 @@ class MyFireWall(object):
                 self.packet_protocol = ip_packet.protocol
                 log.debug(self.packet_protocol)
                 log.debug(event.port)
-                self.protocol_packet = self.packet_protocol.payload
+                self.protocol_packet = ip_packet.payload
                 if self.firewall[0x800, self.packet_protocol, self.protocol_packet.srcport, event.port]:
                     log.debug("Rule found and go through")
                 else:
