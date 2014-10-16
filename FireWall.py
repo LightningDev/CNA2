@@ -17,9 +17,9 @@ class MyFireWall(object):
         self.firewall = {}
         self.set_rule(0x800, 1, 0, of.OFPP_ALL)
         self.set_rule(0x800, 1, 0, 1)
+        self.set_rule(0x800, 1, 0, 2)
         log.debug("Enabling Firewall module")
-    
-    # Rule Firewall = ethernet type(ie.IP), protocol type(ie.TCP) 
+
     def set_rule(self, dl_type, nw_proto, port, src_port):
         self.firewall[(dl_type,nw_proto,port,src_port)]=True
         log.debug("Added firewall rule")
@@ -47,22 +47,18 @@ class MyFireWall(object):
 
 
         if packet.type == ethernet.ARP_TYPE:
-             log.debug("ARP go through")
+             log.debug("ARP Go Through")
         else:
             if packet.type == ethernet.IP_TYPE:
                 ip_packet = packet.payload
                 packet_protocol = ip_packet.protocol
                 protocol_packet = ip_packet.payload
                 self.src_port = -1
-                
-                # If it's ICMP, there is no src port, so src_port = 0
                 if packet_protocol == 1:
                     self.src_port = 0
-                    
-                # If it's UDP or TCP, src_port = TCP.srcport or UDP.srcport
                 if packet_protocol == 6 | packet_protocol == 17:
                     self.src_port = protocol_packet.srcport
-                
+
                 log.debug ("Src Port %s" % self.src_port)
                 log.debug ("Event port %s" % event.port)
                 log.debug ("Source MAC %s " % str(packet.src))
