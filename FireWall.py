@@ -16,6 +16,7 @@ class MyFireWall(object):
         self.table = {}
         self.firewall = {}
         self.set_rule(0x800, 1, 0, of.OFPP_ALL)
+        self.set_rule(0x800, 1, 0, 1)
         log.debug("Enabling Firewall module")
 
     def set_rule(self, dl_type, nw_proto, port, src_port):
