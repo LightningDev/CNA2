@@ -66,11 +66,13 @@ class MyFireWall(object):
                 log.debug ("Destination MAC %s " % str(event.connection))
                 log.debug ("Destination MAC %s " % str(packet.dst))
                 if self.src_port > -1:
-                    if self.firewall[0x800, packet_protocol, self.src_port, event.port]:
-                        log.debug("Rule found and go through")
+                    if self.firewall[0x800, packet_protocol, self.src_port, event.port] is not None:
+                        if self.firewall[0x800, packet_protocol, self.src_port, event.port]:
+                            log.debug("Rule is allowed and go through")
+                        else:
+                            log.debug("Rule is not allowed, rejected")
                     else:
-                        log.debug("Rule not found, rejected")
-                        return
+                        log.debug("Not in restricted rule, so go through")
             else:
                 log.debug("Packet Ethernet Type %s go through" % pkt.ETHERNET.ethernet.getNameForType(packet.type))
 
