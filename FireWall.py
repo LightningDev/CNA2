@@ -66,7 +66,7 @@ class MyFireWall(object):
                 log.debug ("Destination MAC %s " % str(event.connection))
                 log.debug ("Destination MAC %s " % str(packet.dst))
                 if self.src_port > -1:
-                    if self.firewall[0x800, packet_protocol, self.src_port, event.port] is not None:
+                    if (0x800, packet_protocol, self.src_port, event.port) in self.firewall:
                         if self.firewall[0x800, packet_protocol, self.src_port, event.port]:
                             log.debug("Rule is allowed and go through")
                         else:
