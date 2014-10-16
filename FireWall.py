@@ -53,11 +53,13 @@ class MyFireWall(object):
                 packet_protocol = ip_packet.protocol
                 protocol_packet = ip_packet.payload
                 self.src_port = -1
-                log.debug ("Event port %s" % event.port)
                 if packet_protocol == 1:
                     self.src_port = 0
                 if packet_protocol == 6 | packet_protocol == 17:
                     self.src_port = protocol_packet.srcport
+                log.debug ("Src Port %s" % self.src_port)
+                log.debug ("Event port %s" % event.port)
+                log.debug ("Event connection %s " % str(event.connection))
                 if self.src_port > -1:
                     if self.firewall[0x800, packet_protocol, self.src_port, event.port]:
                         log.debug("Rule found and go through")
@@ -65,7 +67,7 @@ class MyFireWall(object):
                         log.debug("Rule not found, rejected")
                         return
             else:
-                log.debug("Packet type is not allowed")
+                log.debug("Packet Ethernet Type %s go through" % pkt.ETHERNET.ethernet.getNameForType(packet.type))
 
 
         # if self.firewall[packet.dl_type, packet.nw_proto, packet.tp_src, event.port]:
