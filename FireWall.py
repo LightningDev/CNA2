@@ -56,11 +56,11 @@ class MyFireWall(object):
                 self.src_port = -1
                 if packet_protocol == 1:
                     self.src_port = 0
-                if packet_protocol == 6 | packet_protocol == 17:
+                if packet_protocol == 6 or packet_protocol == 17:
                     self.src_port = protocol_packet.srcport
 
                 log.debug ("Protocol %s" % packet_protocol)
-                log.debug ("Src Port %s" % self.src_port)
+                log.debug ("Protocol Src Port %s" % self.src_port)
                 log.debug ("Event port %s" % event.port)
                 log.debug ("Source MAC %s " % str(packet.src))
                 log.debug ("Destination MAC %s " % str(event.connection))
