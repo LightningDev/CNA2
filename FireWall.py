@@ -59,7 +59,8 @@ class MyFireWall(object):
                     self.src_port = protocol_packet.srcport
                 log.debug ("Src Port %s" % self.src_port)
                 log.debug ("Event port %s" % event.port)
-                log.debug ("Event connection %s " % str(event.connection))
+                log.debug ("Source MAC %s " % str(packet.src))
+                log.debug ("Destination MAC %s " % str(event.connection))
                 if self.src_port > -1:
                     if self.firewall[0x800, packet_protocol, self.src_port, event.port]:
                         log.debug("Rule found and go through")
