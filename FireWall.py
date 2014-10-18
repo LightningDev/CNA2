@@ -138,6 +138,8 @@ def launch():
         MyFireWall(event.connection)
     core.openflow.addListenerByName("ConnectionUp", start_switch)
     core.openflow.addListenerByName("FlowStatsReceived", start_switch)
+    for con in core.openflow.connections: # make this _connections.keys() for pre-betta
+        con.send(of.ofp_stats_request(body=of.ofp_flow_stats_request()))
 
 
 
