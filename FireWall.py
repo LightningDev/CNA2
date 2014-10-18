@@ -54,8 +54,12 @@ class MyFireWall(object):
                 packet_protocol = ip_packet.protocol
                 protocol_packet = ip_packet.payload
                 self.src_port = -1
+
+                # ICMP
                 if packet_protocol == 1:
                     self.src_port = 0
+
+                # TCP or UDP
                 if packet_protocol == 6 or packet_protocol == 17:
                     self.src_port = protocol_packet.srcport
 
@@ -63,27 +67,24 @@ class MyFireWall(object):
                 log.debug ("Protocol Src Port %s" % self.src_port)
                 log.debug ("Event port %s" % event.port)
                 log.debug ("Source MAC %s " % str(packet.src))
-                log.debug ("Destination MAC %s " % str(event.connection))
+                log.debug ("Event MAC %s " % str(event.connection))
                 log.debug ("Destination MAC %s " % str(packet.dst))
+
+                # If it was ICMP, TCP or UDP, check it in firewall rules
                 if self.src_port > -1:
+                    # If the rule is added in dictionary, check it
                     if (0x800, packet_protocol, self.src_port, event.port) in self.firewall:
                         if self.firewall[0x800, packet_protocol, self.src_port, event.port]:
                             log.debug("Rule is allowed and go through")
                         else:
                             log.debug("Rule is not allowed, rejected")
+                    # else continue because it was not be blocked by the rules
                     else:
                         log.debug("Not in restricted rule, so go through")
+            # Only IPV4 and ARP type of ethernet are checked, the others are allowed to go through (ie.ipv6,vlan)
             else:
                 log.debug("Packet Ethernet Type %s go through" % pkt.ETHERNET.ethernet.getNameForType(packet.type))
 
-
-        # if self.firewall[packet.dl_type, packet.nw_proto, packet.tp_src, event.port]:
-        #     log.debug("Rule (%s %s %s %s) FOUND in %s" %
-        #               dpidToStr(event.connection.dpid), packet.dl_type, packet.nw_proto, packet.tp_src, event.port)
-        # else:
-        #     log.debug("Rule (%s %s %s %s) NOT FOUND in %s" %
-        #               dpidToStr(event.connection.dpid), packet.dl_type, packet.nw_proto, packet.tp_src, event.port)
-        #     return
 
         # Implement Switch
         self.table[str(packet.src)] = packet_in.in_port
@@ -122,11 +123,21 @@ class MyFireWall(object):
             msg.actions.append(action)
             self.connection.send(msg)
 
+    def handle_flow_stats (event):
+        web_bytes = 0
+        web_flows = 0
+        for f in event.stats:
+            if f.match.tp_dst == 80 or f.match.tp_src == 80:
+                web_bytes += f.byte_count
+                web_flows += 1
+
+        log.info("Web traffic: %s bytes over %s flows", web_bytes, web_flows)
 def launch():
     def start_switch (event):
         log.debug ("Controlling %s" % (event.connection,))
         MyFireWall(event.connection)
     core.openflow.addListenerByName("ConnectionUp", start_switch)
+    core.openflow.addListenerByName("FlowStatsReceived", start_switch)
 
 
 
