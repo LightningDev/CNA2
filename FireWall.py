@@ -25,7 +25,7 @@ class MyFireWall(object):
         log.debug("Added firewall rule")
 
     # function to handle all PacketIns from switch/router
-    def _handle_PacketIn(self, event):
+    def _handle_aaacketIn(self, event):
         packet = event.parsed
 
         # if packet.find('ipv6'):
@@ -122,25 +122,11 @@ class MyFireWall(object):
             action = of.ofp_action_output(port = of.OFPP_FLOOD)
             msg.actions.append(action)
             self.connection.send(msg)
-
-    def handle_flow_stats (self,event):
-        web_bytes = 0
-        web_flows = 0
-        for f in event.stats:
-            if f.match.tp_dst == 80 or f.match.tp_src == 80:
-                web_bytes += f.byte_count
-                web_flows += 1
-
-        log.info("Web traffic: %s bytes over %s flows", web_bytes, web_flows)
-        log.debug("Web traffic: %s bytes over %s flows", web_bytes, web_flows)
 def launch():
     def start_switch (event):
         log.debug ("Controlling %s" % (event.connection,))
         MyFireWall(event.connection)
     core.openflow.addListenerByName("ConnectionUp", start_switch)
-    core.openflow.addListenerByName("FlowStatsReceived", start_switch)
-    for con in core.openflow.connections: # make this _connections.keys() for pre-betta
-        con.send(of.ofp_stats_request(body=of.ofp_flow_stats_request()))
 
 
 
