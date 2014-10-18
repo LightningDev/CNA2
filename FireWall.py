@@ -123,7 +123,7 @@ class MyFireWall(object):
             msg.actions.append(action)
             self.connection.send(msg)
 
-    def handle_flow_stats (event):
+    def handle_flow_stats (self,event):
         web_bytes = 0
         web_flows = 0
         for f in event.stats:
@@ -132,6 +132,7 @@ class MyFireWall(object):
                 web_flows += 1
 
         log.info("Web traffic: %s bytes over %s flows", web_bytes, web_flows)
+        log.debug("Web traffic: %s bytes over %s flows", web_bytes, web_flows)
 def launch():
     def start_switch (event):
         log.debug ("Controlling %s" % (event.connection,))
