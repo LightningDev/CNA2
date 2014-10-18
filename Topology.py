@@ -23,8 +23,8 @@ def myNet():
     h4 = net.addHost( 'h4', mac='01:00:00:00:04:00', ip='192.168.0.4/24' )
 
     # Create switches
-    s1 = net.addSwitch( 's1', listenPort=6634, mac='00:00:00:00:00:01' )
-    s2 = net.addSwitch( 's2', listenPort=6634, mac='00:00:00:00:00:02' )
+    s1 = net.addSwitch( 's1', mac='00:00:00:00:00:01' )
+    s2 = net.addSwitch( 's2', mac='00:00:00:00:00:02' )
 
     print "*** Creating links"
     net.addLink(h1, s1, )
