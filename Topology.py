@@ -14,7 +14,7 @@ def myNet():
     #Floodlight controller
     FL_CONTROLLER_IP='10.0.0.5'
 
-    net = Mininet(  controller=Controller )
+    net = Mininet(  controller=OVSController )
 
     # Create nodes
     h1 = net.addHost( 'h1', mac='01:00:00:00:01:00', ip='192.168.0.1/24' )
