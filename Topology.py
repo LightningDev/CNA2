@@ -35,15 +35,15 @@ def myNet():
     # Add Controllers
     odl_ctrl = net.addController( 'c0', controller=RemoteController, ip=ODL_CONTROLLER_IP, port=6633)
 
-    # fl_ctrl = net.addController( 'c1', controller=RemoteController, ip=FL_CONTROLLER_IP, port=6633)
+    fl_ctrl = net.addController( 'c1', controller=RemoteController, ip=FL_CONTROLLER_IP, port=6633)
 
 
     net.build()
 
     # Connect each switch to a different controller
     s1.start( [odl_ctrl] )
-    s2.start( [odl_ctrl])
-    # s2.start( [fl_ctrl] )
+    # s2.start( [odl_ctrl])
+    s2.start( [fl_ctrl] )
 
     s1.cmdPrint('ovs-vsctl show')
 
