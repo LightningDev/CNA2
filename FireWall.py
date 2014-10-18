@@ -25,7 +25,7 @@ class MyFireWall(object):
         log.debug("Added firewall rule")
 
     # function to handle all PacketIns from switch/router
-    def _handle_aaacketIn(self, event):
+    def _handle_PacketIn(self, event):
         packet = event.parsed
 
         # if packet.find('ipv6'):
