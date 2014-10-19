@@ -33,22 +33,13 @@ class DDoSPolicy(BasePolicy):
     
     def action(self):
         if self.fsm.trigger.value == 0:
-            # TODO- set the policy for this application
-            #
-            # To set the policy for this application, implement the
-            # following steps:
-            #
-            # 1. get the list of hosts in ddos attacker state
-            #
-            # 2. match the incoming packet's source and destination ip
-            #  against that list of hosts (using pyretic predicates
-            #  i.e., "match", "modify", and "if_" etc)
-            #
-            # 3. if there is a match apply drop policy, else apply
-            #  policy passthrough and return the policy you just
-            #  created
-
-            # Parallel composition- return the policy that you created
+            # Match incoming flow with each state's flows
+            match_denied_flows = self.fsm.get_policy('denied')
+    
+            # Create state policies for each state
+            p1 = if_(match_denied_flows, drop, self.allow_policy())
+    
+            # Parallel composition 
             return p1
 
         else:
