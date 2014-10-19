@@ -33,8 +33,9 @@ class DDoSPolicy(BasePolicy):
     
     def action(self):
         if self.fsm.trigger.value == 0:
+		
             # Match incoming flow with each state's flows
-            match_denied_flows = self.fsm.get_policy('denied')
+            match_denied_flows = self.fsm.get_policy('ddos-attacker')
     
             # Create state policies for each state
             p1 = if_(match_denied_flows, drop, self.allow_policy())
