@@ -1,105 +1,167 @@
 from pox.core import core
-from pox.lib.util import dpidToStr
+from pox.lib.packet.arp import arp
+from pox.lib.util import dpidToStr, dpid_to_str
 import pox.openflow.libopenflow_01 as of
 import pox.lib.packet as pkt
 import os
 from pox.lib.packet.ethernet import ethernet
+from pox.openflow.of_json import *
+import csv
 
 log = core.getLogger()
-
 
 class MyFireWall(object):
 
     def __init__(self, connection):
         self.connection = connection
         connection.addListeners(self)
-        self.table = {}
-        self.firewall = {}
-        self.set_rule(0x800, 1, 0, of.OFPP_ALL)
-        self.set_rule(0x800, 1, 0, 1)
-        self.set_rule(0x800, 1, 0, 2)
+        self.routingtable = {}
         log.debug("Enabling Firewall module")
+        self.macRules = []
+        self.ipRules = []
 
-    def set_rule(self, dl_type, nw_proto, port, src_port):
-        self.firewall[(dl_type,nw_proto,port,src_port)]=True
-        log.debug("Added firewall rule")
+        with open("mac.csv", 'rb') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                self.macRules.append((EthAddr(row['mac_0']), EthAddr(row['mac_1'])))
+                self.macRules.append((EthAddr(row['mac_1']), EthAddr(row['mac_0'])))
+                log.debug("MAC RULE READ")
+
+        with open("ip.csv", 'rb') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                self.ipRules.append((IPAddr(row['ip_0']), IPAddr(row['ip_1'])))
+                self.ipRules.append((IPAddr(row['ip_1']), IPAddr(row['ip_0'])))
+                log.debug("IP RULE READ")
+
+    def _handle_ConnectionUp (self, event):
+        # for (src, dst) in self.macRules:
+        #     match = of.ofp_match()
+        #     match.dl_src = src
+        #     match.dl_dst = dst
+        #     msg = of.ofp_flow_mod()
+        #     msg.match = match
+        #     msg.actions.append(of.ofp_action_output(port = of.OFPP_NONE))
+        #     event.connection.send(msg)
+
+        # for (src, dst) in self.ipRules:
+        #     match = of.ofp_match()
+        #     match.dl_type = 0x800
+        #     match.nw_src = src
+        #     match.nw_dst = dst
+        #     match.nw_proto = 0x01
+        #     msg = of.ofp_flow_mod()
+        #     msg.match = match
+        #     msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+        #     event.connection.send(msg)
+
+        log.debug("Firewall runs on %s", dpidToStr(event.dpid))
 
     # function to handle all PacketIns from switch/router
     def _handle_PacketIn(self, event):
+
         packet = event.parsed
 
-        # if packet.find('ipv6'):
-        #     log.debug ("IPV6 cannot go through, rejected")
-        #     return
-
-        # only process Ethernet packets
-        # if packet.type != ethernet.IP_TYPE:
-        #     name1 = pkt.ETHERNET.ethernet.getNameForType(packet.type)
-        #     log.debug(name1)
-        #     return
-
-        # check if packet is compliant to rules before proceeding
+        #check if packet is compliant to rules before proceeding
         if not packet.parsed:
-            log.warning ("Ignore incomplete packet")
+            log.warning("Ignore incomplete packet")
             return
+
+        ############################### FIRE-WALL ####################################
+
+        # MAC
+        if (packet.src, packet.dst) in self.macRules:
+            match = of.ofp_match()
+            match.dl_src = packet.src
+            match.dl_dst = packet.dst
+            msg = of.ofp_flow_mod()
+            msg.match = match
+            msg.actions.append(of.ofp_action_output(port = of.OFPP_NONE))
+            event.connection.send(msg)
+            log.debug("MAC RULE ADDED")
+            return
+
+        # ARP
+        # if packet.type == packet.ARP_TYPE:
+        #     if packet.payload.opcode == arp.REQUEST:
+        #         src = packet.payload.protosrc
+        #         dst = packet.payload.protodst
+        #         if (src, dst) in self.ipRules:
+        #             match = of.ofp_match()
+        #             match.dl_type = 0x0806
+        #             match.nw_src = src
+        #             match.nw_dst = dst
+        #             match.nw_proto = 0x01
+        #             msg = of.ofp_flow_mod()
+        #             msg.match = match
+        #             msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+        #             event.connection.send(msg)
+        #             log.debug("ARP RULE ADDED")
+        #             return
+
+        # Ethernet
+        if packet.type == ethernet.IP_TYPE:
+            ip_packet = packet.payload
+            protocol = ip_packet.protocol
+            ipsrc = ip_packet.srcip
+            ipdst = ip_packet.dstip
+            if (ipsrc, ipdst) in self.ipRules:
+                 # ICMP
+                if protocol == 1:
+                    match = of.ofp_match()
+                    match.dl_type = 0x800
+                    match.nw_src = ipsrc
+                    match.nw_dst = ipdst
+                    match.nw_proto = 1
+                    msg = of.ofp_flow_mod()
+                    msg.match = match
+                    msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+                    event.connection.send(msg)
+                    log.debug("ICMP RULE ADDED")
+                    return
+                # TCP
+                elif protocol == 6:
+                    match = of.ofp_match()
+                    match.dl_type = 0x800
+                    match.nw_src = ipsrc
+                    match.nw_dst = ipdst
+                    match.nw_proto = 6
+                    msg = of.ofp_flow_mod()
+                    msg.match = match
+                    msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+                    event.connection.send(msg)
+                    log.debug("TCP RULE ADDED")
+                    return
+                # UDP
+                elif protocol == 17:
+                    match = of.ofp_match()
+                    match.dl_type = 0x800
+                    match.nw_src = ipsrc
+                    match.nw_dst = ipdst
+                    match.nw_proto = 17
+                    msg = of.ofp_flow_mod()
+                    msg.match = match
+                    msg.actions.append(of.ofp_action_output(port=of.OFPP_NONE))
+                    event.connection.send(msg)
+                    log.debug("UDP RULE ADDED")
+                    return
+
+        ################################ Switch ######################################
 
         packet_in = event.ofp
 
+        self.routingtable[str(packet.src)] = packet_in.in_port
 
-        if packet.type == ethernet.ARP_TYPE:
-             log.debug("ARP Go Through")
-        else:
-            if packet.type == ethernet.IP_TYPE:
-                ip_packet = packet.payload
-                packet_protocol = ip_packet.protocol
-                protocol_packet = ip_packet.payload
-                self.src_port = -1
-
-                # ICMP
-                if packet_protocol == 1:
-                    self.src_port = 0
-
-                # TCP or UDP
-                if packet_protocol == 6 or packet_protocol == 17:
-                    self.src_port = protocol_packet.srcport
-
-                log.debug ("Protocol %s" % packet_protocol)
-                log.debug ("Protocol Src Port %s" % self.src_port)
-                log.debug ("Event port %s" % event.port)
-                log.debug ("Source MAC %s " % str(packet.src))
-                log.debug ("Event MAC %s " % str(event.connection))
-                log.debug ("Destination MAC %s " % str(packet.dst))
-
-                # If it was ICMP, TCP or UDP, check it in firewall rules
-                if self.src_port > -1:
-                    # If the rule is added in dictionary, check it
-                    if (0x800, packet_protocol, self.src_port, event.port) in self.firewall:
-                        if self.firewall[0x800, packet_protocol, self.src_port, event.port]:
-                            log.debug("Rule is allowed and go through")
-                        else:
-                            log.debug("Rule is not allowed, rejected")
-                    # else continue because it was not be blocked by the rules
-                    else:
-                        log.debug("Not in restricted rule, so go through")
-            # Only IPV4 and ARP type of ethernet are checked, the others are allowed to go through (ie.ipv6,vlan)
-            else:
-                log.debug("Packet Ethernet Type %s go through" % pkt.ETHERNET.ethernet.getNameForType(packet.type))
-
-
-        # Implement Switch
-        self.table[str(packet.src)] = packet_in.in_port
-
-        if str(packet.dst) in self.table:
-            port = self.table[str(packet.dst)]
-            log.debug("installing flow for %s.%i -> %s.%i" % (packet.src, packet_in.in_port, packet.dst, port))
-
+        if str(packet.dst) in self.routingtable:
+            port = self.routingtable[str(packet.dst)]
+            log.debug("Installing flow for %s.%i -> %s.%i" % (packet.src, packet_in.in_port, packet.dst, port))
             # create new flow with match record set to match dest and src
             msg = of.ofp_flow_mod()
             msg.match.dl_src = packet.src
             msg.match.dl_dst = packet.dst
             msg.idle_timeout = 10
             msg.hard_timeout = 30
-            msg.actions.append(of.ofp_action_output(port = port))
+            msg.actions.append(of.ofp_action_output(port=port))
             msg.buffer_id = packet_in.buffer_id
             self.connection.send(msg)
         else:
@@ -119,14 +181,41 @@ class MyFireWall(object):
                 msg.data = packet_in.data
 
             # Add an action to send to the specified port
-            action = of.ofp_action_output(port = of.OFPP_FLOOD)
+            action = of.ofp_action_output(port=of.OFPP_FLOOD)
             msg.actions.append(action)
             self.connection.send(msg)
+
+    def _handle_FlowStatsReceived(self, event):
+        stats = flow_stats_to_list(event.stats)
+        log.debug("FlowStatsReceived from %s: %s",
+                  dpidToStr(event.connection.dpid), stats)
+
+        # Get number of bytes/packets in flows for web traffic only
+        web_bytes = 0
+        web_flows = 0
+        web_packet = 0
+        for f in event.stats:
+            if f.match.tp_dst == 80 or f.match.tp_src == 80:
+                web_bytes += f.byte_count
+                web_packet += f.packet_count
+                web_flows += 1
+        log.info("Web traffic from %s: %s bytes (%s packets) over %s flows",
+                 dpidToStr(event.connection.dpid), web_bytes, web_packet, web_flows)
+
+
+def _timer_func():
+    for connection in core.openflow.connections.values():
+        connection.send(of.ofp_stats_request(body=of.ofp_flow_stats_request()))
+        connection.send(of.ofp_stats_request(body=of.ofp_port_stats_request()))
+    log.debug("Sent %i flow/port stats request(s)", len(core.openflow.connections))
+
+
 def launch():
-    def start_switch (event):
-        log.debug ("Controlling %s" % (event.connection,))
+    from pox.lib.recoco import Timer
+
+    def start_switch(event):
+        log.debug("Controlling %s" % (event.connection,))
         MyFireWall(event.connection)
+
     core.openflow.addListenerByName("ConnectionUp", start_switch)
-
-
-
+    Timer(10, _timer_func, recurring=True)

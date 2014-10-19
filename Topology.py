@@ -14,13 +14,13 @@ def myNet():
     #Floodlight controller
     FL_CONTROLLER_IP='10.0.0.5'
 
-    net = Mininet(  controller=RemoteController )
+    net = Mininet(controller=RemoteController,autoSetMacs=True )
 
     # Create nodes
-    h1 = net.addHost( 'h1', mac='01:00:00:00:01:00', ip='192.168.0.1/24' )
-    h2 = net.addHost( 'h2', mac='01:00:00:00:02:00', ip='192.168.0.2/24' )
-    h3 = net.addHost( 'h3', mac='01:00:00:00:03:00', ip='192.168.0.3/24' )
-    h4 = net.addHost( 'h4', mac='01:00:00:00:04:00', ip='192.168.0.4/24' )
+    h1 = net.addHost( 'h1', ip='192.168.0.1/24' )
+    h2 = net.addHost( 'h2', ip='192.168.0.2/24' )
+    h3 = net.addHost( 'h3', ip='192.168.0.3/24' )
+    h4 = net.addHost( 'h4', ip='192.168.0.4/24' )
 
     # Create switches
     s1 = net.addSwitch( 's1', mac='00:00:00:00:00:01' )
